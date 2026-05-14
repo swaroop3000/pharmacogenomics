@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacogenomics Dosing Calculator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">[+]</span>
+                <div>
+                    <h1>PGx_PRECISION.EXE</h1>
+                    <p>> STROKE MEDICATION DOSING TERMINAL</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn">[?]</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Left Column: Inputs -->
+            <section class="input-section">
+                
+                <!-- Drug Selection -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <span class="card-icon">[s]</span>
+                        <h2>QUERY_MEDICATION</h2>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="drug-search-input" class="drug-search-input" placeholder="> Enter medication name (e.g. Codeine)..." autocomplete="off">
+                        <div id="drug-search-results" class="drug-search-results">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Genetic Profile -->
+                <div class="card fade-in" style="animation-delay: 0.1s;">
+                    <div class="card-header">
+                        <span class="card-icon">[g]</span>
+                        <h2>GENETIC_PROFILE</h2>
+                    </div>
+                    <p class="section-desc">Awaiting diplotype parameters for metabolizer resolution...</p>
+                    
+                    <div id="genetic-inputs-container" class="genetic-inputs">
+                        <!-- Populated by JS based on selected drug -->
+                        <div class="placeholder-text">> WAITING_FOR_MEDICATION_INPUT_</div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Right Column: Results -->
+            <section class="result-section">
+                <div class="card result-card sticky-card fade-in" style="animation-delay: 0.2s;">
+                    <div class="card-header">
+                        <span class="card-icon">[r]</span>
+                        <h2>SYSTEM_RECOMMENDATION</h2>
+                    </div>
+                    
+                    <div id="recommendation-content" class="recommendation-content">
+                        <!-- Initial State -->
+                        <div class="empty-state">
+                            <div class="empty-icon" style="font-size: 3rem; margin-bottom: 1rem;">[!]</div>
+                            <p>> CPIC DATABASE CONNECTION ESTABLISHED.</p>
+                            <p>> AWAITING QUERY...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="dosingAlgorithms.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

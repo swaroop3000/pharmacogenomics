@@ -9,9 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchResults = document.getElementById('drug-search-results');
     const geneticInputsContainer = document.getElementById('genetic-inputs-container');
     const recommendationContent = document.getElementById('recommendation-content');
+    
+    // Theme Elements
+    const themeSelector = document.getElementById('theme-selector');
+    const modeToggle = document.getElementById('mode-toggle');
 
     // Initialize application
     async function init() {
+        setupTheme();
+        
         searchInput.disabled = true;
         searchInput.placeholder = "> SYSTEM INITIALIZING... FETCHING CPIC DATABASE";
         
@@ -21,6 +27,37 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.placeholder = "> ENTER MEDICATION NAME (E.G. CODEINE)...";
         
         setupSearch();
+    }
+
+    function setupTheme() {
+        // Load preferences
+        const savedTheme = localStorage.getItem('pgx_theme') || 'retro';
+        const savedMode = localStorage.getItem('pgx_mode') || 'dark';
+
+        // Apply preferences
+        document.body.dataset.theme = savedTheme;
+        document.body.dataset.mode = savedMode;
+        themeSelector.value = savedTheme;
+        updateModeButton(savedMode);
+
+        // Listeners
+        themeSelector.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            document.body.dataset.theme = newTheme;
+            localStorage.setItem('pgx_theme', newTheme);
+        });
+
+        modeToggle.addEventListener('click', () => {
+            const currentMode = document.body.dataset.mode;
+            const newMode = currentMode === 'dark' ? 'light' : 'dark';
+            document.body.dataset.mode = newMode;
+            localStorage.setItem('pgx_mode', newMode);
+            updateModeButton(newMode);
+        });
+    }
+
+    function updateModeButton(currentMode) {
+        modeToggle.textContent = currentMode === 'dark' ? '[ GO LIGHT ]' : '[ GO DARK ]';
     }
 
     function setupSearch() {

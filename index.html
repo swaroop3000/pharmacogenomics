@@ -7,21 +7,30 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="index.css">
 </head>
-<body>
+<body data-theme="retro" data-mode="dark">
     <div class="crt-overlay"></div>
     <div class="app-container">
         <!-- Header -->
         <header class="app-header">
             <div class="logo">
-                <span class="logo-icon">[+]</span>
+                <span class="logo-icon theme-icon">[+]</span>
                 <div>
-                    <h1>PGx_PRECISION.EXE</h1>
-                    <p>> STROKE MEDICATION DOSING TERMINAL</p>
+                    <h1 class="app-title">PGx_PRECISION.EXE</h1>
+                    <p class="app-subtitle">> STROKE MEDICATION DOSING TERMINAL</p>
                 </div>
+            </div>
+            <div class="header-actions">
+                <select id="theme-selector" class="theme-select">
+                    <option value="retro">Retro Terminal</option>
+                    <option value="neon">90s Neon</option>
+                    <option value="aero">Frutiger Aero</option>
+                    <option value="modern">Modern Glass</option>
+                </select>
+                <button id="mode-toggle" class="mode-btn">[ DARK ]</button>
             </div>
         </header>
 

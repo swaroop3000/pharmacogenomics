@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const searchInput = document.getElementById('drug-search-input');
     const searchResults = document.getElementById('drug-search-results');
+    const clearSearchBtn = document.getElementById('clear-search');
     const geneticInputsContainer = document.getElementById('genetic-inputs-container');
     const recommendationContent = document.getElementById('recommendation-content');
     
@@ -15,18 +16,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeToggle = document.getElementById('mode-toggle');
 
     // Initialize application
-    async function init() {
-        setupTheme();
-        
-        searchInput.disabled = true;
-        searchInput.placeholder = "> SYSTEM INITIALIZING... FETCHING CPIC DATABASE";
-        
-        allDrugs = await fetchAllActionableDrugs();
-        
-        searchInput.disabled = false;
-        searchInput.placeholder = "> ENTER MEDICATION NAME (E.G. CODEINE)...";
-        
         setupSearch();
+        runBootSequence();
+    }
+
+    async function runBootSequence() {
+        const lines = [
+            { text: "INITIALIZING PGx_PRECISION.EXE...", status: "load" },
+            { text: "CONNECTING TO CPIC_CENTRAL_DB...", status: "load" },
+            { text: "FETCHING GENE-DRUG PAIRS...", status: "ok" },
+            { text: "RESOLVING ACTIONABLE GUIDELINES...", status: "ok" },
+            { text: "SYSTEM_CHECK: 100% FUNCTIONAL.", status: "ok" },
+            { text: "AWAITING_USER_QUERY_", status: "load" }
+        ];
+
+        recommendationContent.innerHTML = '<div class="empty-state"><div class="boot-log"></div></div>';
+        const log = recommendationContent.querySelector('.boot-log');
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = document.createElement('div');
+            line.className = 'boot-line';
+            line.innerHTML = `> ${lines[i].text} [ <span class="status-${lines[i].status}">${lines[i].status.toUpperCase()}</span> ]`;
+            log.appendChild(line);
+            
+            // Trigger animation
+            setTimeout(() => line.classList.add('active'), 50);
+            
+            await new Promise(r => setTimeout(r, 400 + Math.random() * 400));
+        }
     }
 
     function setupTheme() {
@@ -63,18 +80,33 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupSearch() {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase().trim();
+            
+            // Toggle clear button
+            if (query.length > 0) {
+                clearSearchBtn.classList.add('has-text');
+            } else {
+                clearSearchBtn.classList.remove('has-text');
+            }
+
             if (query.length < 1) {
                 searchResults.classList.remove('active');
                 return;
             }
 
             const matched = allDrugs.filter(d => d.name.toLowerCase().includes(query));
-            renderSearchResults(matched);
+            renderSearchResults(matched, query);
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearSearchBtn.classList.remove('has-text');
+            searchResults.classList.remove('active');
+            searchInput.focus();
         });
 
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target) && !clearSearchBtn.contains(e.target)) {
                 searchResults.classList.remove('active');
             }
         });
@@ -87,7 +119,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function renderSearchResults(results) {
+    function highlightMatch(text, query) {
+        if (!query) return text;
+        const index = text.toLowerCase().indexOf(query.toLowerCase());
+        if (index === -1) return text;
+        
+        const before = text.substring(0, index);
+        const match = text.substring(index, index + query.length);
+        const after = text.substring(index + query.length);
+        
+        return `${before}<span class="match-highlight">${match}</span>${after}`;
+    }
+
+    function renderSearchResults(results, query) {
         searchResults.innerHTML = '';
         if (results.length === 0) {
             searchResults.innerHTML = '<div class="search-result-item"><div class="search-result-name" style="color: var(--text-muted)">[!] NO MATCHING MEDICATIONS FOUND</div></div>';
@@ -98,12 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = document.createElement('div');
                 item.className = 'search-result-item';
                 item.innerHTML = `
-                    <div class="search-result-name">${drug.name}</div>
+                    <div class="search-result-name">${highlightMatch(drug.name, query)}</div>
                     <div class="search-result-genes">REQUIRES_GENES: [${drug.geneList.join(', ')}]</div>
                 `;
                 item.onclick = () => {
                     selectDrug(drug);
                     searchInput.value = drug.name;
+                    clearSearchBtn.classList.add('has-text');
                     searchResults.classList.remove('active');
                 };
                 searchResults.appendChild(item);
@@ -272,6 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderRecommendationUI(rec) {
+        const riskLevel = rec.type === 'danger' ? 'HIGH' : (rec.type === 'warning' ? 'MODERATE' : 'LOW');
+        const guidelineUrl = selectedDrug.guidelineId ? `https://cpicpgx.org/guidelines/guideline-for-${selectedDrug.name.toLowerCase().replace(/ /g, '-')}/` : 'https://cpicpgx.org/guidelines/';
+
         recommendationContent.innerHTML = `
             <div class="recommendation-box fade-in">
                 <div class="rec-header">
@@ -279,7 +327,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="rec-drug-name">> ${rec.drugName}</div>
                         <div class="rec-class">  ${rec.drugClass}</div>
                     </div>
-                    <div class="action-badge ${rec.actionClass}">[ ${rec.action} ]</div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                        <div class="action-badge ${rec.actionClass}">[ ${rec.action} ]</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted)">RISK_LEVEL: ${riskLevel}</div>
+                    </div>
                 </div>
                 <div class="rec-body">
                     <div class="rec-text ${rec.type}">
@@ -289,6 +340,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <ul class="implications-list">
                         ${rec.implications.map(imp => `<li>${imp}</li>`).join('')}
                     </ul>
+                    
+                    <div style="margin-top: 2rem; text-align: center;">
+                        <a href="${guidelineUrl}" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block;">
+                            [ VIEW FULL CPIC GUIDELINE ]
+                        </a>
+                    </div>
                 </div>
             </div>
         `;

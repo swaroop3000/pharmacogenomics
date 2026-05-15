@@ -5,22 +5,28 @@ const CPIC_BASE_URL = 'https://api.cpicpgx.org/v1';
 async function fetchAllActionableDrugs() {
     try {
         // Fetch all drug-gene pairs where the gene is required for a recommendation
-        const response = await fetch(`${CPIC_BASE_URL}/pair_view?usedforrecommendation=eq.Yes`);
+        // We use the /pair endpoint with resource embedding for drug names because /pair_view is restricted
+        const response = await fetch(`${CPIC_BASE_URL}/pair?usedforrecommendation=eq.true&select=genesymbol,drugid,drug(name,guidelineid)`);
         const data = await response.json();
         
         // Group by drugid (RxNorm)
         const drugMap = {};
         for (const item of data) {
-            if (!drugMap[item.drugid]) {
-                drugMap[item.drugid] = {
-                    id: item.drugid,
-                    rxnorm: item.drugid,
-                    name: item.drugname.charAt(0).toUpperCase() + item.drugname.slice(1),
+            const drugId = item.drugid;
+            const drugName = item.drug ? item.drug.name : 'Unknown Drug';
+            const guidelineId = item.drug ? item.drug.guidelineid : null;
+            
+            if (!drugMap[drugId]) {
+                drugMap[drugId] = {
+                    id: drugId,
+                    rxnorm: drugId,
+                    name: drugName.charAt(0).toUpperCase() + drugName.slice(1),
+                    guidelineId: guidelineId,
                     genes: new Set(),
                     hasPGx: true
                 };
             }
-            drugMap[item.drugid].genes.add(item.genesymbol);
+            drugMap[drugId].genes.add(item.genesymbol);
         }
 
         // Convert sets to arrays and return sorted list

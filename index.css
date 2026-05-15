@@ -428,6 +428,43 @@ h1, h2, h3 {
     box-shadow: var(--shadow-glow);
 }
 
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.clear-search {
+    position: absolute;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: none;
+    transition: color var(--transition-speed);
+}
+
+.clear-search:hover {
+    color: var(--accent-primary);
+}
+
+.search-wrapper:focus-within .clear-search.has-text {
+    display: block;
+}
+
+.match-highlight {
+    color: var(--accent-primary);
+    text-decoration: underline;
+    font-weight: bold;
+}
+[data-theme="retro"] .match-highlight {
+    background: var(--accent-primary);
+    color: var(--bg-main);
+    text-decoration: none;
+}
+
 .drug-search-results {
     position: absolute;
     top: 100%;
@@ -611,6 +648,31 @@ h1, h2, h3 {
     margin-bottom: 1rem;
     color: var(--accent-primary);
 }
+
+/* Boot Log */
+.boot-log {
+    width: 100%;
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    text-align: left;
+    color: var(--text-muted);
+    margin-top: 1rem;
+}
+
+.boot-line {
+    margin-bottom: 0.25rem;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.2s ease-out;
+}
+
+.boot-line.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.boot-line .status-ok { color: var(--accent-secondary); }
+.boot-line .status-load { color: var(--accent-primary); }
 
 .rec-header {
     display: flex;

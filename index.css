@@ -403,6 +403,7 @@ h1, h2, h3 {
 .search-container {
     position: relative;
     width: 100%;
+    z-index: 100; /* Lift the whole container to ensure dropdown clears following cards */
 }
 
 .drug-search-input {
@@ -476,12 +477,18 @@ h1, h2, h3 {
     border-radius: var(--border-radius);
     max-height: 300px;
     overflow-y: auto;
-    z-index: 50;
+    z-index: 1000; /* Ensure it stays above everything */
     display: none;
     box-shadow: var(--shadow-md);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
 }
+
+/* Ensure legibility in transparent themes */
+[data-theme="modern"] .drug-search-results { background: #1e293b; }
+[data-theme="modern"][data-mode="light"] .drug-search-results { background: #ffffff; }
+[data-theme="aero"] .drug-search-results { background: #003366; }
+[data-theme="aero"][data-mode="light"] .drug-search-results { background: #f0f7ff; }
 [data-theme="retro"] .drug-search-results { margin-top: -2px; }
 
 .drug-search-results.active {

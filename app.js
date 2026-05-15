@@ -16,8 +16,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeToggle = document.getElementById('mode-toggle');
 
     // Initialize application
+    async function init() {
+        setupTheme();
+        
+        searchInput.disabled = true;
+        searchInput.placeholder = "> SYSTEM INITIALIZING...";
+        
+        // Start boot sequence animation and data fetch in parallel
+        const bootPromise = runBootSequence();
+        allDrugs = await fetchAllActionableDrugs();
+        await bootPromise;
+        
+        searchInput.disabled = false;
+        searchInput.placeholder = "> ENTER MEDICATION NAME (E.G. CODEINE)...";
+        
         setupSearch();
-        runBootSequence();
     }
 
     async function runBootSequence() {

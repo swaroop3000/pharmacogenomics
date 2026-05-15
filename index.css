@@ -789,6 +789,27 @@ h1, h2, h3 {
 [data-theme="modern"] .app-footer { border-top-style: solid; }
 [data-theme="aero"] .app-footer { border-top-style: solid; }
 
+.footer-name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.linkedin-link {
+    color: var(--text-muted);
+    transition: all var(--transition-speed);
+    display: inline-flex;
+    align-items: center;
+}
+
+.linkedin-link:hover {
+    color: #0077b5 !important; /* LinkedIn Brand Color */
+    transform: scale(1.1);
+    background: transparent !important; /* Override general footer link hover styles */
+    border-bottom: none !important;
+}
+
 .app-footer a {
     color: var(--accent-primary);
     text-decoration: none;

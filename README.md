@@ -1,6 +1,6 @@
 # PGx_PRECISION.EXE
 ### Stroke Medication Dosing Terminal
-**Jyothi Swaroop Javangula**
+**Jyothi Swaroop Javangula** [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jjswaroop)
 
 A real-time, evidence-based pharmacogenomics application designed for clinicians. This tool connects directly to the **Clinical Pharmacogenetics Implementation Consortium (CPIC)** databases to provide personalized dosing recommendations based on patient genetic variants (diplotypes).
 

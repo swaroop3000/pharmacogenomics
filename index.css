@@ -364,7 +364,7 @@ h1, h2, h3 {
 }
 
 .card:focus-within {
-    z-index: 1001;
+    z-index: 2000 !important; /* Force this card to the very top during interaction */
 }
 .card::before {
     display: var(--card-pseudo-border);
@@ -490,12 +490,12 @@ h1, h2, h3 {
 }
 
 /* Ensure legibility in all themes with SOLID backgrounds for the dropdown */
-[data-theme="retro"] .drug-search-results { background: #000000; }
-[data-theme="neon"] .drug-search-results { background: #160033; }
-[data-theme="modern"] .drug-search-results { background: #1e293b; border-color: var(--accent-primary); }
-[data-theme="modern"][data-mode="light"] .drug-search-results { background: #ffffff; border-color: var(--accent-primary); }
-[data-theme="aero"] .drug-search-results { background: #002244; border-color: var(--accent-primary); }
-[data-theme="aero"][data-mode="light"] .drug-search-results { background: #ffffff; border-color: var(--accent-primary); }
+[data-theme="retro"] .drug-search-results { background: #000000 !important; }
+[data-theme="neon"] .drug-search-results { background: #160033 !important; }
+[data-theme="modern"] .drug-search-results { background: #1e293b !important; background-image: none !important; border-color: var(--accent-primary) !important; }
+[data-theme="modern"][data-mode="light"] .drug-search-results { background: #ffffff !important; background-image: none !important; border-color: var(--accent-primary) !important; }
+[data-theme="aero"] .drug-search-results { background: #001a33 !important; background-image: none !important; border-color: var(--accent-primary) !important; }
+[data-theme="aero"][data-mode="light"] .drug-search-results { background: #ffffff !important; background-image: none !important; border-color: var(--accent-primary) !important; }
 [data-theme="retro"] .drug-search-results { margin-top: -2px; }
 
 .drug-search-results.active {

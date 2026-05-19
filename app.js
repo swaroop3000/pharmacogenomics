@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function runBootSequence() {
         const lines = [
-            { text: "INITIALIZING PGx_PRECISION.EXE...", status: "load" },
+            { text: "INITIALIZING PGx_PRECISION...", status: "load" },
             { text: "CONNECTING TO CPIC_CENTRAL_DB...", status: "load" },
             { text: "FETCHING GENE-DRUG PAIRS...", status: "ok" },
             { text: "RESOLVING ACTIONABLE GUIDELINES...", status: "ok" },

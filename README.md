@@ -1,4 +1,4 @@
-# PGx_PRECISION.EXE
+# PGx_PRECISION
 ### Stroke Medication Dosing Terminal
 **Jyothi Swaroop Javangula** [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jjswaroop)
 

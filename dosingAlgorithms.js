@@ -101,83 +101,190 @@ async function fetchRecommendation(rxnormId, lookupKeys) {
     }
 }
 
-// Format the CPIC API response into our UI format
-function formatCPICRecommendation(drug, recommendation, phenotypes) {
-    if (!recommendation) {
-        return {
-            drugName: drug.name,
-            drugClass: drug.gene + ' Guideline',
-            action: 'Unknown Variant',
-            actionClass: 'action-info',
-            text: `No specific CPIC recommendation found for the entered diplotypes.`,
-            implications: [
-                'Please verify the genetic test results.',
-                'Consult a clinical pharmacist or clinical geneticist.',
-                'Default to cautious standard dosing and careful monitoring.'
-            ],
-            type: 'info'
+// Async function to search RxNorm API for drug names and match them with CPIC/PGx guidelines
+async function searchRxNormDrugs(query, cpicDrugs) {
+    try {
+        // Step 1: Filter CPIC drugs locally
+        const cpicMatched = cpicDrugs.filter(d => d.name.toLowerCase().includes(query.toLowerCase()));
+        
+        // Step 2: Query RxNorm API for a broader search
+        const response = await fetch(`https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(query)}&maxEntries=10`);
+        const data = await response.json();
+        
+        const candidates = data.approximateGroup ? data.approximateGroup.candidate : [];
+        const rxNormMatched = [];
+        const nameMap = new Map(); // rxcui -> name
+        
+        if (candidates && candidates.length > 0) {
+            // Group candidates by rxcui and resolve names
+            for (const cand of candidates) {
+                if (cand.rxcui) {
+                    const rxcui = cand.rxcui;
+                    const name = cand.name;
+                    
+                    // Prioritize candidates with names, and keep the most complete name
+                    if (name && (!nameMap.has(rxcui) || nameMap.get(rxcui).length < name.length)) {
+                        nameMap.set(rxcui, name);
+                    } else if (!nameMap.has(rxcui)) {
+                        // Fallback if no name found yet
+                        nameMap.set(rxcui, "");
+                    }
+                }
+            }
+            
+            for (const [rxcui, rawName] of nameMap.entries()) {
+                // If we couldn't resolve a name, use a default fallback from local or query
+                let name = rawName;
+                if (!name) {
+                    const localEvidence = PGx_EVIDENCE_DATABASE[rxcui];
+                    name = localEvidence ? localEvidence.name : query;
+                }
+                
+                // Clean name (RxNorm names can be capitalized/formatted weirdly)
+                const cleanName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+                
+                // Check if already in CPIC list
+                const cpicDrug = cpicDrugs.find(d => d.rxnorm === rxcui);
+                if (cpicDrug) {
+                    continue; // Skip to avoid duplicates
+                }
+                
+                // Check if in local evidence database
+                const hasLocalEvidence = !!PGx_EVIDENCE_DATABASE[rxcui];
+                let geneList = [];
+                if (hasLocalEvidence) {
+                    if (rxcui === '731110' || rxcui === '1116632') { // Prasugrel, Ticagrelor
+                        geneList = ['CYP2C19'];
+                    } else if (rxcui === '1191') { // Aspirin
+                        geneList = [];
+                    } else {
+                        geneList = ['CYP2D6']; // default mapping for local
+                    }
+                }
+                
+                rxNormMatched.push({
+                    id: rxcui,
+                    rxnorm: rxcui,
+                    name: cleanName,
+                    guidelineId: null,
+                    geneList: geneList,
+                    hasPGx: hasLocalEvidence
+                });
+            }
+        }
+        
+        // Step 3: Combine lists (local CPIC matches first, then RxNorm matches)
+        const combined = [...cpicMatched];
+        for (const item of rxNormMatched) {
+            if (!combined.some(c => c.rxnorm === item.rxnorm)) {
+                combined.push(item);
+            }
+        }
+        
+        return combined.slice(0, 20); // Cap at 20 results
+    } catch (error) {
+        console.error('Error searching RxNorm', error);
+        // Fallback to local filter only
+        return cpicDrugs.filter(d => d.name.toLowerCase().includes(query.toLowerCase())).slice(0, 20);
+    }
+}
+
+// Fetch and consolidate all evidence for a drug-gene pair
+async function getConsolidatedPGxEvidence(drug, lookupKeys, phenotypes) {
+    const rxnorm = drug.rxnorm;
+    
+    // 1. Fetch CPIC Recommendation dynamically if guideline exists
+    let cpicRec = null;
+    if (drug.guidelineId) {
+        cpicRec = await fetchRecommendation(rxnorm, lookupKeys);
+    }
+    
+    // 2. Fetch local annotations from PGx_EVIDENCE_DATABASE
+    const localEvidence = PGx_EVIDENCE_DATABASE[rxnorm];
+    
+    // If no evidence is found in CPIC or local DB, default to standard non-PGx recommendation
+    if (!cpicRec && !localEvidence) {
+        return getNonPGxRecommendation(drug);
+    }
+    
+    // Format CPIC recommendation
+    let cpicFormatted = null;
+    if (cpicRec) {
+        let action = 'Standard Dosing';
+        let actionClass = 'action-standard';
+        let type = 'standard';
+        const text = cpicRec.drugrecommendation || "";
+        const lowerText = text.toLowerCase();
+        
+        if (lowerText.includes('avoid') || lowerText.includes('alternative') || lowerText.includes('extreme caution')) {
+            action = 'Avoid / Alternative';
+            actionClass = 'action-avoid';
+            type = 'danger';
+        } else if (lowerText.includes('reduce dose') || lowerText.includes('caution') || lowerText.includes('decrease') || lowerText.includes('lower dose')) {
+            action = 'Caution / Adjust Dose';
+            actionClass = 'action-caution';
+            type = 'warning';
+        } else if (lowerText.includes('increase dose')) {
+            action = 'Increase Dose';
+            actionClass = 'action-caution';
+            type = 'warning';
+        } else if (cpicRec.classification === 'Strong' && !lowerText.includes('standard')) {
+            action = 'Actionable';
+            actionClass = 'action-info';
+            type = 'info';
+        }
+
+        const implicationsList = [];
+        if (cpicRec.implications) {
+            for (const [gene, implication] of Object.entries(cpicRec.implications)) {
+                implicationsList.push(`<b>${gene}:</b> ${implication}`);
+            }
+        }
+        if (cpicRec.comments) {
+            implicationsList.push(`Note: ${cpicRec.comments}`);
+        }
+
+        cpicFormatted = {
+            action: action,
+            actionClass: actionClass,
+            text: text,
+            implications: implicationsList.length > 0 ? implicationsList : ['See CPIC guidelines for full details.'],
+            type: type
         };
     }
-
-    let action = 'Standard Dosing';
-    let actionClass = 'action-standard';
-    let type = 'standard';
-
-    const text = recommendation.drugrecommendation || "";
-    const lowerText = text.toLowerCase();
     
-    if (lowerText.includes('avoid') || lowerText.includes('alternative') || lowerText.includes('extreme caution')) {
-        action = 'Avoid / Alternative';
-        actionClass = 'action-avoid';
-        type = 'danger';
-    } else if (lowerText.includes('reduce dose') || lowerText.includes('caution') || lowerText.includes('decrease') || lowerText.includes('lower dose')) {
-        action = 'Caution / Adjust Dose';
-        actionClass = 'action-caution';
-        type = 'warning';
-    } else if (lowerText.includes('increase dose')) {
-        action = 'Increase Dose';
-        actionClass = 'action-caution';
-        type = 'warning';
-    } else if (recommendation.classification === 'Strong' && !lowerText.includes('standard')) {
-        action = 'Actionable';
-        actionClass = 'action-info';
-        type = 'info';
-    }
-
-    const implicationsList = [];
-    if (recommendation.implications) {
-        for (const [gene, implication] of Object.entries(recommendation.implications)) {
-            implicationsList.push(`<b>${gene}:</b> ${implication}`);
-        }
-    }
-    if (recommendation.comments) {
-        implicationsList.push(`Note: ${recommendation.comments}`);
-    }
-    
-    const phenoSummary = Object.entries(phenotypes).map(([g, p]) => `<b>${g}</b>: ${p}`).join(', ');
-
     return {
         drugName: drug.name,
-        drugClass: drug.gene + ' Guideline',
-        action: action,
-        actionClass: actionClass,
-        text: `Patient phenotype: ${phenoSummary}. <br><br><strong>CPIC Guideline:</strong> ${text}`,
-        implications: implicationsList.length > 0 ? implicationsList : ['See CPIC guidelines for full details.'],
-        type: type
+        rxnorm: rxnorm,
+        geneList: drug.geneList,
+        phenotypes: phenotypes,
+        cpic: cpicFormatted,
+        dpwg: localEvidence ? localEvidence.dpwg : null,
+        fda: localEvidence ? localEvidence.fda : null,
+        pharmgkb: localEvidence ? localEvidence.pharmgkb : null
     };
 }
 
 function getNonPGxRecommendation(drug) {
     return {
         drugName: drug.name,
-        drugClass: 'No CPIC Guidelines',
-        action: 'Standard Dosing',
-        actionClass: 'action-standard',
-        text: 'There are currently no actionable CPIC pharmacogenomic guidelines for this medication.',
-        implications: [
-            'Proceed with standard age and weight-based dosing.',
-            'Monitor patient clinical response normally.'
-        ],
-        type: 'info'
+        rxnorm: drug.rxnorm,
+        geneList: [],
+        phenotypes: {},
+        cpic: null,
+        dpwg: {
+            action: "Standard Dosing",
+            actionClass: "action-standard",
+            text: "No genetic adjustments required. Default to standard therapeutic guidelines."
+        },
+        fda: {
+            warningType: "No PGx Warning",
+            warningClass: "action-standard",
+            text: "No pharmacogenomic warning or dosing guidelines present on the FDA drug label."
+        },
+        pharmgkb: {
+            level: "Level 4",
+            text: "No strong clinical association or evidence linking genetic variants to drug response."
+        }
     };
 }

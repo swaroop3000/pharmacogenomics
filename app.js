@@ -91,8 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupSearch() {
+        let timeoutId = null;
+
         searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
+            const query = e.target.value.trim();
             
             // Toggle clear button
             if (query.length > 0) {
@@ -106,8 +108,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const matched = allDrugs.filter(d => d.name.toLowerCase().includes(query));
-            renderSearchResults(matched, query);
+            // Debounce input to avoid overwhelming the RxNorm API
+            if (timeoutId) clearTimeout(timeoutId);
+            
+            // Show inline loader
+            searchResults.innerHTML = '<div class="search-result-item"><div class="search-result-name" style="color: var(--text-muted)">> SEARCHING GENOMICS DATABASE... <span class="blink">_</span></div></div>';
+            searchResults.classList.add('active');
+
+            timeoutId = setTimeout(async () => {
+                const matched = await searchRxNormDrugs(query, allDrugs);
+                renderSearchResults(matched, query);
+            }, 300);
         });
 
         clearSearchBtn.addEventListener('click', () => {
@@ -149,14 +160,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (results.length === 0) {
             searchResults.innerHTML = '<div class="search-result-item"><div class="search-result-name" style="color: var(--text-muted)">[!] NO MATCHING MEDICATIONS FOUND</div></div>';
         } else {
-            // Cap at 20 results for performance
             const limited = results.slice(0, 20);
             limited.forEach(drug => {
                 const item = document.createElement('div');
                 item.className = 'search-result-item';
+                
+                const geneStr = drug.geneList.length > 0 ? drug.geneList.join(', ') : 'NONE';
+                const pTag = drug.hasPGx ? '<span style="color: var(--accent-secondary); font-size: 0.8rem; margin-left: 0.5rem;">[PGx ACTIONABLE]</span>' : '';
+                
                 item.innerHTML = `
-                    <div class="search-result-name">${highlightMatch(drug.name, query)}</div>
-                    <div class="search-result-genes">REQUIRES_GENES: [${drug.geneList.join(', ')}]</div>
+                    <div class="search-result-name">${highlightMatch(drug.name, query)} ${pTag}</div>
+                    <div class="search-result-genes">REQUIRES_GENES: [${geneStr}]</div>
                 `;
                 item.onclick = () => {
                     selectDrug(drug);
@@ -174,13 +188,25 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedDrug = drug;
         geneticState = {}; 
         
-        // Show loading state for inputs
-        geneticInputsContainer.innerHTML = '<div class="placeholder-text">> ESTABLISHING CONNECTION TO CPIC... <span class="blink">_</span></div>';
-        recommendationContent.innerHTML = `
-            <div class="empty-state fade-in">
-                <div class="empty-icon">[?]</div>
-                <p>> AWAITING GENETIC INPUT FOR ${drug.name.toUpperCase()}</p>
-            </div>`;
+        if (drug.geneList.length === 0) {
+            geneticInputsContainer.innerHTML = `
+                <div class="placeholder-text" style="color: var(--text-muted)">
+                    > NO GENETIC PARAMETERS REQUIRED FOR STANDARD DOSING PROTOCOLS.
+                </div>
+            `;
+            recommendationContent.innerHTML = `
+                <div class="empty-state fade-in">
+                    <p>> PROCESSING DRUG DOSING GUIDELINE FOR ${drug.name.toUpperCase()}... <span class="blink">_</span></p>
+                </div>`;
+        } else {
+            // Show loading state for inputs
+            geneticInputsContainer.innerHTML = '<div class="placeholder-text">> ESTABLISHING CONNECTION TO CPIC... <span class="blink">_</span></div>';
+            recommendationContent.innerHTML = `
+                <div class="empty-state fade-in">
+                    <div class="empty-icon">[?]</div>
+                    <p>> AWAITING GENETIC INPUT FOR ${drug.name.toUpperCase()}</p>
+                </div>`;
+        }
         
         await renderGeneticInputs(drug);
         updateRecommendation();
@@ -189,6 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderGeneticInputs(drug) {
         geneticInputsContainer.innerHTML = '';
         const genes = drug.geneList;
+
+        if (genes.length === 0) {
+            return;
+        }
 
         for (const gene of genes) {
             geneticState[gene] = { allele1: '', allele2: '', phenotypeData: null };
@@ -307,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recommendationContent.innerHTML = `
             <div class="empty-state fade-in">
-                <p>> QUERYING CPIC GUIDELINES DATABASE... <span class="blink">_</span></p>
+                <p>> QUERYING INTEGRATED EVIDENCE DATABASES... <span class="blink">_</span></p>
             </div>
         `;
 
@@ -324,41 +354,167 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const recommendation = await fetchRecommendation(selectedDrug.rxnorm, lookupKeys);
-        const recFormatted = formatCPICRecommendation(selectedDrug, recommendation, phenotypes);
-        renderRecommendationUI(recFormatted);
+        const consolidated = await getConsolidatedPGxEvidence(selectedDrug, lookupKeys, phenotypes);
+        renderRecommendationUI(consolidated);
     }
 
     function renderRecommendationUI(rec) {
-        const riskLevel = rec.type === 'danger' ? 'HIGH' : (rec.type === 'warning' ? 'MODERATE' : 'LOW');
-        const guidelineUrl = selectedDrug.guidelineId ? `https://cpicpgx.org/guidelines/guideline-for-${selectedDrug.name.toLowerCase().replace(/ /g, '-')}/` : 'https://cpicpgx.org/guidelines/';
+        // Construct phenoSummary
+        let phenoSummary = 'None';
+        if (rec.geneList && rec.geneList.length > 0) {
+            phenoSummary = Object.entries(rec.phenotypes)
+                .map(([g, p]) => `${g} (${p})`)
+                .join(', ');
+        }
+        
+        // Guidelines URL mapping
+        const guidelineUrl = selectedDrug.guidelineId 
+            ? `https://cpicpgx.org/guidelines/guideline-for-${selectedDrug.name.toLowerCase().replace(/ /g, '-')}/` 
+            : 'https://cpicpgx.org/guidelines/';
+            
+        // Build cards
+        let cpicCard = '';
+        if (rec.cpic) {
+            const bClass = rec.cpic.type === 'danger' ? 'badge-danger' : (rec.cpic.type === 'warning' ? 'badge-warning' : 'badge-success');
+            cpicCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[1] CPIC RECOMMENDATION (USA)</span>
+                        <span class="db-badge ${bClass}">[ ${rec.cpic.action} ]</span>
+                    </div>
+                    <div class="db-content">
+                        Patient Profile: <strong>${phenoSummary}</strong>.<br><br>
+                        <strong>Guideline:</strong> ${rec.cpic.text}
+                    </div>
+                </div>
+            `;
+        } else {
+            cpicCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[1] CPIC RECOMMENDATION (USA)</span>
+                        <span class="db-badge badge-info">[ NO DATA ]</span>
+                    </div>
+                    <div class="db-content" style="color: var(--text-muted)">
+                        There are currently no actionable CPIC clinical dosing guidelines available for this medication.
+                    </div>
+                </div>
+            `;
+        }
+
+        let dpwgCard = '';
+        if (rec.dpwg) {
+            let bClass = 'badge-success';
+            if (rec.dpwg.actionClass === 'action-avoid') bClass = 'badge-danger';
+            else if (rec.dpwg.actionClass === 'action-caution') bClass = 'badge-warning';
+            
+            dpwgCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[2] DPWG GUIDELINE (NETHERLANDS)</span>
+                        <span class="db-badge ${bClass}">[ ${rec.dpwg.action} ]</span>
+                    </div>
+                    <div class="db-content">
+                        <strong>Guideline:</strong> ${rec.dpwg.text}
+                    </div>
+                </div>
+            `;
+        } else {
+            dpwgCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[2] DPWG GUIDELINE (NETHERLANDS)</span>
+                        <span class="db-badge badge-info">[ NO DATA ]</span>
+                    </div>
+                    <div class="db-content" style="color: var(--text-muted)">
+                        No Dutch Pharmacogenetics Working Group (DPWG) dosing guidelines are annotated for this medication.
+                    </div>
+                </div>
+            `;
+        }
+
+        let fdaCard = '';
+        if (rec.fda) {
+            let bClass = 'badge-success';
+            if (rec.fda.warningClass === 'action-avoid') bClass = 'badge-danger';
+            else if (rec.fda.warningClass === 'action-caution') bClass = 'badge-warning';
+            
+            fdaCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[3] FDA LABEL ANNOTATION (REGULATORY)</span>
+                        <span class="db-badge ${bClass}">[ ${rec.fda.warningType} ]</span>
+                    </div>
+                    <div class="db-content">
+                        <strong>Label Text:</strong> ${rec.fda.text}
+                    </div>
+                </div>
+            `;
+        } else {
+            fdaCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[3] FDA LABEL ANNOTATION (REGULATORY)</span>
+                        <span class="db-badge badge-info">[ NO WARNING ]</span>
+                    </div>
+                    <div class="db-content" style="color: var(--text-muted)">
+                        No specific pharmacogenomic warning or testing requirements are annotated in the FDA product label.
+                    </div>
+                </div>
+            `;
+        }
+
+        let pgkbCard = '';
+        if (rec.pharmgkb) {
+            let bClass = 'badge-info';
+            if (rec.pharmgkb.level.includes('1')) bClass = 'badge-success';
+            else if (rec.pharmgkb.level.includes('2')) bClass = 'badge-warning';
+            
+            pgkbCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[4] PHARMGKB CLINICAL EVIDENCE</span>
+                        <span class="db-badge ${bClass}">[ ${rec.pharmgkb.level} ]</span>
+                    </div>
+                    <div class="db-content">
+                        <strong>Evidence Summary:</strong> ${rec.pharmgkb.text}
+                    </div>
+                </div>
+            `;
+        } else {
+            pgkbCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[4] PHARMGKB CLINICAL EVIDENCE</span>
+                        <span class="db-badge badge-info">[ NO ASSOC ]</span>
+                    </div>
+                    <div class="db-content" style="color: var(--text-muted)">
+                        No strong literature associations or evidence annotations are documented for this medication in PharmGKB.
+                    </div>
+                </div>
+            `;
+        }
 
         recommendationContent.innerHTML = `
             <div class="recommendation-box fade-in">
-                <div class="rec-header">
-                    <div>
-                        <div class="rec-drug-name">> ${rec.drugName}</div>
-                        <div class="rec-class">  ${rec.drugClass}</div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
-                        <div class="action-badge ${rec.actionClass}">[ ${rec.action} ]</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted)">RISK_LEVEL: ${riskLevel}</div>
+                <div class="rec-header" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+                    <div class="rec-drug-name">> ${rec.drugName}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                        IDENTIFIER: RxNorm CUI ${rec.rxnorm} | PATIENT_PROFILE: ${phenoSummary}
                     </div>
                 </div>
-                <div class="rec-body">
-                    <div class="rec-text ${rec.type}">
-                        ${rec.text}
-                    </div>
-                    <h3>> CLINICAL_IMPLICATIONS</h3>
-                    <ul class="implications-list">
-                        ${rec.implications.map(imp => `<li>${imp}</li>`).join('')}
-                    </ul>
-                    
-                    <div style="margin-top: 2rem; text-align: center;">
-                        <a href="${guidelineUrl}" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block;">
-                            [ VIEW FULL CPIC GUIDELINE ]
-                        </a>
-                    </div>
+                
+                <div class="db-grid">
+                    ${cpicCard}
+                    ${dpwgCard}
+                    ${fdaCard}
+                    ${pgkbCard}
+                </div>
+                
+                <div style="margin-top: 2rem; text-align: center;">
+                    <a href="${guidelineUrl}" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block;">
+                        [ OPEN EXTERNAL CLINICAL GUIDELINES ]
+                    </a>
                 </div>
             </div>
         `;

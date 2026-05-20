@@ -509,6 +509,37 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        let cpndsCard = '';
+        if (rec.cpnds) {
+            let bClass = 'badge-success';
+            if (rec.cpnds.actionClass === 'action-avoid') bClass = 'badge-danger';
+            else if (rec.cpnds.actionClass === 'action-caution') bClass = 'badge-warning';
+            
+            cpndsCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[5] CPNDS GUIDELINE (CANADA)</span>
+                        <span class="db-badge ${bClass}">[ ${rec.cpnds.action} ]</span>
+                    </div>
+                    <div class="db-content">
+                        <strong>Guideline:</strong> ${rec.cpnds.text}
+                    </div>
+                </div>
+            `;
+        } else {
+            cpndsCard = `
+                <div class="db-card">
+                    <div class="db-header">
+                        <span class="db-title">[5] CPNDS GUIDELINE (CANADA)</span>
+                        <span class="db-badge badge-info">[ NO DATA ]</span>
+                    </div>
+                    <div class="db-content" style="color: var(--text-muted)">
+                        No Canadian Pharmacogenomics Network for Drug Safety (CPNDS) dosing guidelines are available for this medication.
+                    </div>
+                </div>
+            `;
+        }
+
         recommendationContent.innerHTML = `
             <div class="recommendation-box fade-in">
                 <div class="rec-header" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
@@ -523,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${dpwgCard}
                     ${fdaCard}
                     ${pgkbCard}
+                    ${cpndsCard}
                 </div>
                 
                 <div style="margin-top: 2rem; text-align: center;">

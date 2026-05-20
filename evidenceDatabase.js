@@ -1,6 +1,6 @@
 /**
  * PGx_PRECISION - Pharmacogenomics Local Evidence Database
- * Contains DPWG guidelines, FDA annotations, and PharmGKB evidence levels for major medications.
+ * Contains DPWG guidelines, FDA annotations, PharmGKB evidence levels, and CPNDS guidelines.
  * Keys are normalized lower-case generic drug names or RxNorm CUI IDs.
  */
 
@@ -21,6 +21,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "CYP2C19 loss-of-function alleles (*2, *3) are strongly associated with reduced active metabolite concentration, reduced platelet inhibition, and a higher risk of major adverse cardiovascular events (including stent thrombosis) compared to normal metabolizers."
+        },
+        cpnds: {
+            action: "Avoid / Alternative",
+            actionClass: "action-avoid",
+            text: "CYP2C19 genotyping is recommended to guide antiplatelet selection. Intermediate and poor metabolizers should receive alternative antiplatelets (prasugrel or ticagrelor) to optimize outcomes."
         }
     },
     // Warfarin
@@ -39,6 +44,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "CYP2C9, VKORC1, and CYP4F2 genetic variants significantly influence warfarin clearance and sensitivity. Standardized dosing algorithms incorporating these genotypes reduce time to stable therapeutic INR and bleed risk."
+        },
+        cpnds: {
+            action: "Caution / Adjust Dose",
+            actionClass: "action-caution",
+            text: "Genotype-guided initiation dosing using CYP2C9 and VKORC1 is recommended to achieve target INR faster and reduce pediatric/adult bleeding risks."
         }
     },
     // Simvastatin
@@ -57,6 +67,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "The SLCO1B1 c.521T>C (rs4149056) variant decreases uptake of simvastatin into the liver, resulting in higher systemic concentrations and a dose-dependent risk of statin-induced myopathy."
+        },
+        cpnds: {
+            action: "Caution / Adjust Dose",
+            actionClass: "action-caution",
+            text: "SLCO1B1 genotype dictates myopathy risk. For low transporter activity alleles, avoid high-dose (40mg+) simvastatin and select alternative statins."
         }
     },
     // Codeine
@@ -75,6 +90,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "Codeine is a prodrug requiring conversion to morphine by CYP2D6. Genetic variations leading to non-functional (poor) or duplicated active (ultra-rapid) CYP2D6 enzymes lead to either therapy failure or severe toxicity."
+        },
+        cpnds: {
+            action: "Avoid / Alternative",
+            actionClass: "action-avoid",
+            text: "Do not use codeine in pediatric or breastfeeding patients. Avoid in CYP2D6 Poor Metabolizers (no efficacy) and Ultra-rapid Metabolizers (high toxicity risk)."
         }
     },
     // Tramadol
@@ -93,6 +113,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "CYP2D6 metabolizes tramadol to its active O-desmethyltramadol metabolite. Altered CYP2D6 phenotypes affect pain control efficacy and toxicity risk."
+        },
+        cpnds: {
+            action: "Avoid / Alternative",
+            actionClass: "action-avoid",
+            text: "Avoid tramadol use in pediatric patients. For CYP2D6 Poor Metabolizers, analgesia is compromised; for Ultra-rapid Metabolizers, high risk of toxicity."
         }
     },
     // Sertraline
@@ -111,6 +136,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "CYP2C19 poor metabolizers exhibit a significantly slower clearance rate of sertraline, leading to elevated plasma levels and higher rates of gastrointestinal and central nervous system side effects."
+        },
+        cpnds: {
+            action: "Caution / Adjust Dose",
+            actionClass: "action-caution",
+            text: "CYP2C19 Poor Metabolizers show higher exposure. Consider a 50% dose reduction or an alternative antidepressant (e.g. fluoxetine) in adolescents."
         }
     },
     // Escitalopram
@@ -129,6 +159,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "CYP2C19 genotype variation determines escitalopram metabolism speed. Poor metabolizers have elevated blood concentration and higher risk of QT interval prolongation."
+        },
+        cpnds: {
+            action: "Caution / Adjust Dose",
+            actionClass: "action-caution",
+            text: "CYP2C19 Poor Metabolizers should limit daily dose to 10 mg (pediatric) or 20 mg (adult) due to higher exposure and risk of QT interval prolongation."
         }
     },
     // Amitriptyline
@@ -147,6 +182,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "Amitriptyline is demethylated to active nortriptyline via CYP2C19, and both are hydroxylated via CYP2D6. Genetic variation in both genes heavily affects parent/metabolite ratios and cardiotoxicity risk."
+        },
+        cpnds: {
+            action: "Avoid / Alternative",
+            actionClass: "action-avoid",
+            text: "CYP2D6 or CYP2C19 Poor Metabolizers have high toxicity risks; avoid use or reduce initial dose by 50% under therapeutic drug monitoring."
         }
     },
     // Prasugrel
@@ -165,6 +205,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1B",
             text: "Prasugrel is a prodrug activated primarily by CYP3A4 and CYP2B6, with minor contributions from CYP2C9 and CYP2C19. It is unaffected by CYP2C19 poor metabolizer status."
+        },
+        cpnds: {
+            action: "Standard Dosing",
+            actionClass: "action-standard",
+            text: "No genetic dose adjustment required. Prasugrel efficacy and safety are not significantly affected by CYP2C19 polymorphisms."
         }
     },
     "731110": {
@@ -182,6 +227,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1B",
             text: "Prasugrel is a prodrug activated primarily by CYP3A4 and CYP2B6, with minor contributions from CYP2C9 and CYP2C19. It is unaffected by CYP2C19 poor metabolizer status."
+        },
+        cpnds: {
+            action: "Standard Dosing",
+            actionClass: "action-standard",
+            text: "No genetic dose adjustment required. Prasugrel efficacy and safety are not significantly affected by CYP2C19 polymorphisms."
         }
     },
     // Ticagrelor
@@ -200,6 +250,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "Ticagrelor is a direct-acting reversible P2Y12 receptor antagonist. Efficacy and bleeding rates are identical across normal, intermediate, and poor CYP2C19 metabolizers."
+        },
+        cpnds: {
+            action: "Standard Dosing",
+            actionClass: "action-standard",
+            text: "No genetic adjustments required. Efficacy remains stable across all CYP2C19 metabolizer groups. Recommended alternative to clopidogrel."
         }
     },
     // Ibuprofen
@@ -218,6 +273,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 1A",
             text: "CYP2C9 is the primary enzyme responsible for the clearance of ibuprofen. Poor metabolizers (*3/*3) experience significantly higher exposure and risk of gastrointestinal bleeding."
+        },
+        cpnds: {
+            action: "Caution / Adjust Dose",
+            actionClass: "action-caution",
+            text: "For CYP2C9 Poor Metabolizers (*3/*3), reduce starting dose by 50% to prevent prolonged exposure and minimize gastrointestinal side effects."
         }
     },
     // Aspirin
@@ -236,6 +296,11 @@ const PGx_EVIDENCE_DATABASE = {
         pharmgkb: {
             level: "Level 4",
             text: "There is no strong clinical evidence linking common genetic variants to aspirin resistance or efficacy. Standard antiplatelet protocols apply."
+        },
+        cpnds: {
+            action: "Standard Dosing",
+            actionClass: "action-standard",
+            text: "No genetic dose adjustments recommended. Standard clinical antiplatelet protocols apply without genetic testing requirements."
         }
     }
 };

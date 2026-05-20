@@ -263,7 +263,8 @@ async function getConsolidatedPGxEvidence(drug, lookupKeys, phenotypes) {
         cpic: cpicFormatted,
         dpwg: localEvidence ? localEvidence.dpwg : null,
         fda: localEvidence ? localEvidence.fda : null,
-        pharmgkb: localEvidence ? localEvidence.pharmgkb : null
+        pharmgkb: localEvidence ? localEvidence.pharmgkb : null,
+        cpnds: localEvidence ? localEvidence.cpnds : null
     };
 }
 
@@ -287,6 +288,11 @@ function getNonPGxRecommendation(drug) {
         pharmgkb: {
             level: "Level 4",
             text: "No strong clinical association or evidence linking genetic variants to drug response."
+        },
+        cpnds: {
+            action: "Standard Dosing",
+            actionClass: "action-standard",
+            text: "No pediatric or adult genetic dosing recommendations established. Standard clinical dosing applies."
         }
     };
 }

@@ -376,6 +376,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let cpicCard = '';
         if (rec.cpic) {
             const bClass = rec.cpic.type === 'danger' ? 'badge-danger' : (rec.cpic.type === 'warning' ? 'badge-warning' : 'badge-success');
+            
+            let cpicImplicationsHtml = '';
+            if (rec.cpic.implications && rec.cpic.implications.length > 0) {
+                cpicImplicationsHtml = `
+                    <div class="cpic-implications" style="margin-top: 1rem; border-top: 1px dashed var(--border-color); padding-top: 0.75rem; font-size: 0.85rem; line-height: 1.3;">
+                        <span style="color: var(--text-muted); text-transform: uppercase; font-weight: bold;">> CLINICAL IMPLICATIONS:</span>
+                        <ul style="margin: 0.5rem 0 0 1rem; padding: 0; list-style-type: square; color: var(--text-color);">
+                            ${rec.cpic.implications.map(imp => `<li style="margin-bottom: 0.4rem;">${imp}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
             cpicCard = `
                 <div class="db-card">
                     <div class="db-header">
@@ -385,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="db-content">
                         Patient Profile: <strong>${phenoSummary}</strong>.<br><br>
                         <strong>Guideline:</strong> ${rec.cpic.text}
+                        ${cpicImplicationsHtml}
                     </div>
                 </div>
             `;

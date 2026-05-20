@@ -6,7 +6,7 @@ async function fetchAllActionableDrugs() {
     try {
         // Fetch all drug-gene pairs where the gene is required for a recommendation
         // We use the /pair endpoint with resource embedding for drug names because /pair_view is restricted
-        const response = await fetch(`${CPIC_BASE_URL}/pair?usedforrecommendation=eq.true&select=genesymbol,drugid,drug(name,guidelineid)`);
+        const response = await fetch(`${CPIC_BASE_URL}/pair?usedforrecommendation=eq.true&select=genesymbol,drugid,drug(name,guidelineid,guideline:guidelineid(url))`);
         const data = await response.json();
         
         // Group by drugid (RxNorm)
@@ -16,6 +16,7 @@ async function fetchAllActionableDrugs() {
             const drugId = item.drugid.replace(/^RxNorm:/i, '');
             const drugName = item.drug ? item.drug.name : 'Unknown Drug';
             const guidelineId = item.drug ? item.drug.guidelineid : null;
+            const guidelineUrl = (item.drug && item.drug.guideline) ? item.drug.guideline.url : null;
             
             if (!drugMap[drugId]) {
                 drugMap[drugId] = {
@@ -23,6 +24,7 @@ async function fetchAllActionableDrugs() {
                     rxnorm: drugId,
                     name: drugName.charAt(0).toUpperCase() + drugName.slice(1),
                     guidelineId: guidelineId,
+                    guidelineUrl: guidelineUrl,
                     genes: new Set(),
                     hasPGx: true
                 };
@@ -261,6 +263,7 @@ async function getConsolidatedPGxEvidence(drug, lookupKeys, phenotypes) {
         geneList: drug.geneList,
         phenotypes: phenotypes,
         cpic: cpicFormatted,
+        cpicUrl: drug.guidelineUrl || null,
         dpwg: localEvidence ? localEvidence.dpwg : null,
         fda: localEvidence ? localEvidence.fda : null,
         pharmgkb: localEvidence ? localEvidence.pharmgkb : null,
@@ -275,6 +278,7 @@ function getNonPGxRecommendation(drug) {
         geneList: [],
         phenotypes: {},
         cpic: null,
+        cpicUrl: drug.guidelineUrl || null,
         dpwg: {
             action: "Standard Dosing",
             actionClass: "action-standard",

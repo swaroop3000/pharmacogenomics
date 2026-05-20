@@ -368,9 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Guidelines URL mapping
-        const guidelineUrl = selectedDrug.guidelineId 
-            ? `https://cpicpgx.org/guidelines/guideline-for-${selectedDrug.name.toLowerCase().replace(/ /g, '-')}/` 
-            : 'https://cpicpgx.org/guidelines/';
+        const guidelineUrl = rec.cpicUrl || 'https://cpicpgx.org/guidelines/';
             
         // Build cards
         let cpicCard = '';
@@ -400,6 +398,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong>Guideline:</strong> ${rec.cpic.text}
                         ${cpicImplicationsHtml}
                     </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="${guidelineUrl}" target="_blank" class="db-link">> [ VIEW CPIC GUIDELINE SOURCE ]</a>
+                    </div>
                 </div>
             `;
         } else {
@@ -411,6 +412,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="db-content" style="color: var(--text-muted)">
                         There are currently no actionable CPIC clinical dosing guidelines available for this medication.
+                    </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://cpicpgx.org/guidelines/" target="_blank" class="db-link">> [ CPIC GUIDELINES INDEX ]</a>
                     </div>
                 </div>
             `;
@@ -431,6 +435,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="db-content">
                         <strong>Guideline:</strong> ${rec.dpwg.text}
                     </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://www.pharmgkb.org/page/dpwg" target="_blank" class="db-link">> [ VIEW DPWG AT PHARMGKB ]</a>
+                    </div>
                 </div>
             `;
         } else {
@@ -442,6 +449,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="db-content" style="color: var(--text-muted)">
                         No Dutch Pharmacogenetics Working Group (DPWG) dosing guidelines are annotated for this medication.
+                    </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://www.pharmgkb.org/page/dpwg" target="_blank" class="db-link">> [ DPWG GUIDELINES INDEX ]</a>
                     </div>
                 </div>
             `;
@@ -462,6 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="db-content">
                         <strong>Label Text:</strong> ${rec.fda.text}
                     </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://www.fda.gov/drugs/science-and-research-drugs/table-pharmacogenomic-biomarkers-drug-labeling" target="_blank" class="db-link">> [ VIEW FDA BIOMARKER TABLE ]</a>
+                    </div>
                 </div>
             `;
         } else {
@@ -473,6 +486,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="db-content" style="color: var(--text-muted)">
                         No specific pharmacogenomic warning or testing requirements are annotated in the FDA product label.
+                    </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://www.fda.gov/drugs/science-and-research-drugs/table-pharmacogenomic-biomarkers-drug-labeling" target="_blank" class="db-link">> [ FDA BIOMARKERS TABLE ]</a>
                     </div>
                 </div>
             `;
@@ -493,6 +509,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="db-content">
                         <strong>Evidence Summary:</strong> ${rec.pharmgkb.text}
                     </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://www.pharmgkb.org/search?query=${encodeURIComponent(rec.drugName)}" target="_blank" class="db-link">> [ SEARCH PHARMGKB FOR ${rec.drugName.toUpperCase()} ]</a>
+                    </div>
                 </div>
             `;
         } else {
@@ -504,6 +523,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="db-content" style="color: var(--text-muted)">
                         No strong literature associations or evidence annotations are documented for this medication in PharmGKB.
+                    </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://www.pharmgkb.org/" target="_blank" class="db-link">> [ PHARMGKB HOME ]</a>
                     </div>
                 </div>
             `;
@@ -524,6 +546,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="db-content">
                         <strong>Guideline:</strong> ${rec.cpnds.text}
                     </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://www.cpnds.ubc.ca/" target="_blank" class="db-link">> [ VIEW CPNDS GUIDELINES ]</a>
+                    </div>
                 </div>
             `;
         } else {
@@ -535,6 +560,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="db-content" style="color: var(--text-muted)">
                         No Canadian Pharmacogenomics Network for Drug Safety (CPNDS) dosing guidelines are available for this medication.
+                    </div>
+                    <div class="db-card-footer" style="margin-top: 0.75rem; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 0.5rem;">
+                        <a href="https://www.cpnds.ubc.ca/" target="_blank" class="db-link">> [ CPNDS HOME ]</a>
                     </div>
                 </div>
             `;

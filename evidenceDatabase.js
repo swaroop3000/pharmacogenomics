@@ -150,6 +150,23 @@ const PGx_EVIDENCE_DATABASE = {
         }
     },
     // Prasugrel
+    "613391": {
+        name: "Prasugrel",
+        dpwg: {
+            action: "Standard Dosing",
+            actionClass: "action-standard",
+            text: "No genetic dose adjustment required. CYP2C19 genetic variants do not affect the clinical efficacy or bleeding risk of prasugrel."
+        },
+        fda: {
+            warningType: "Informational PGx",
+            warningClass: "action-standard",
+            text: "Prasugrel activation is not significantly dependent on CYP2C19. It is an effective alternative antiplatelet for CYP2C19 poor metabolizers."
+        },
+        pharmgkb: {
+            level: "Level 1B",
+            text: "Prasugrel is a prodrug activated primarily by CYP3A4 and CYP2B6, with minor contributions from CYP2C9 and CYP2C19. It is unaffected by CYP2C19 poor metabolizer status."
+        }
+    },
     "731110": {
         name: "Prasugrel",
         dpwg: {

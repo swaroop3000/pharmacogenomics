@@ -12,7 +12,8 @@ async function fetchAllActionableDrugs() {
         // Group by drugid (RxNorm)
         const drugMap = {};
         for (const item of data) {
-            const drugId = item.drugid;
+            if (!item.drugid) continue;
+            const drugId = item.drugid.replace(/^RxNorm:/i, '');
             const drugName = item.drug ? item.drug.name : 'Unknown Drug';
             const guidelineId = item.drug ? item.drug.guidelineid : null;
             
@@ -77,7 +78,8 @@ async function lookupPhenotype(gene, allele1, allele2) {
 // Async function to fetch recommendations based on lookup keys
 async function fetchRecommendation(rxnormId, lookupKeys) {
     try {
-        const response = await fetch(`${CPIC_BASE_URL}/recommendation?drugid=eq.${rxnormId}`);
+        const queryId = rxnormId.startsWith('RxNorm:') ? rxnormId : `RxNorm:${rxnormId}`;
+        const response = await fetch(`${CPIC_BASE_URL}/recommendation?drugid=eq.${queryId}`);
         const recommendations = await response.json();
         
         // Find a matching recommendation
@@ -153,7 +155,7 @@ async function searchRxNormDrugs(query, cpicDrugs) {
                 const hasLocalEvidence = !!PGx_EVIDENCE_DATABASE[rxcui];
                 let geneList = [];
                 if (hasLocalEvidence) {
-                    if (rxcui === '731110' || rxcui === '1116632') { // Prasugrel, Ticagrelor
+                    if (rxcui === '731110' || rxcui === '613391' || rxcui === '1116632') { // Prasugrel, Ticagrelor
                         geneList = ['CYP2C19'];
                     } else if (rxcui === '1191') { // Aspirin
                         geneList = [];

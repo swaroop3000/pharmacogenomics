@@ -585,10 +585,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${cpndsCard}
                 </div>
                 
-                <div style="margin-top: 2rem; text-align: center;">
-                    <a href="${guidelineUrl}" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block;">
-                        [ OPEN EXTERNAL CLINICAL GUIDELINES ]
-                    </a>
+                <div class="external-links-section" style="margin-top: 2rem; border-top: 1px dashed var(--border-color); padding-top: 1.5rem; text-align: center;">
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; font-weight: bold;">> OPEN EXTERNAL CLINICAL GUIDELINES:</div>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem;">
+                        <a href="${guidelineUrl}" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block; padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                            [ 1. CPIC ]
+                        </a>
+                        <a href="https://www.pharmgkb.org/page/dpwg" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block; padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                            [ 2. DPWG ]
+                        </a>
+                        <a href="https://www.fda.gov/drugs/science-and-research-drugs/table-pharmacogenomic-biomarkers-drug-labeling" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block; padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                            [ 3. FDA LABEL ]
+                        </a>
+                        <a href="https://www.pharmgkb.org/search?query=${encodeURIComponent(rec.drugName)}" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block; padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                            [ 4. PHARMGKB ]
+                        </a>
+                        <a href="https://www.cpnds.ubc.ca/" target="_blank" class="mode-btn" style="text-decoration: none; display: inline-block; padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                            [ 5. CPNDS ]
+                        </a>
+                    </div>
                 </div>
             </div>
         `;
